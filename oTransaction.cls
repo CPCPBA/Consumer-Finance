@@ -9,6 +9,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
+Private mIndex As Long
 Private mPostedDate As Date
 Private mSource As String
 Private mFITID As String
@@ -19,6 +20,10 @@ Private mExisting As Boolean
 
 Public Property Get postedDate() As Date
   postedDate = mPostedDate
+End Property
+
+Public Property Get Index() As Long
+  Index = mIndex
 End Property
 
 Public Property Get Source() As String
@@ -33,8 +38,8 @@ Public Property Get Description() As String
   Description = mDescription
 End Property
 
-Public Property Get Category() As String
-  Category = mCategory
+Public Property Get category() As String
+  category = mCategory
 End Property
 
 Public Property Get amount() As Currency
@@ -48,20 +53,23 @@ End Property
 Public Property Let postedDate(posted As Date)
   mPostedDate = posted
 End Property
+Public Property Let Index(i As Long)
+  mIndex = i
+End Property
 
 Public Property Let Source(src As String)
   mSource = src
 End Property
 
-Public Property Let FITID(transID As String)
-  mFITID = transID
+Public Property Let FITID(TransID As String)
+  mFITID = TransID
 End Property
 
 Public Property Let Description(desc As String)
   mDescription = desc
 End Property
 
-Public Property Let Category(grouping As String)
+Public Property Let category(grouping As String)
   mCategory = grouping
 End Property
 
