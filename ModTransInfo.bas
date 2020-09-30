@@ -67,7 +67,12 @@ Sub writeRecords(banks As Collection)
 End Sub
 
 
+<<<<<<< Updated upstream
 Sub getNewTransactions(str As String, bank As oBank)
+=======
+
+Sub getNewTransactions(str As String, fi As oFI)
+>>>>>>> Stashed changes
 '---------------------------------------------------------------------------------------
 ' Procedure : getNewTransactions
 ' Author    : Christopher Prost, CP Business Analysis LLC. (9/21/2020)
@@ -99,6 +104,7 @@ Sub getNewTransactions(str As String, bank As oBank)
   Dim strEnd As Long
   Dim count As Long
   
+<<<<<<< Updated upstream
   ' ModProc = "0301"
   
   strStart = 1
@@ -138,10 +144,26 @@ Sub getNewTransactions(str As String, bank As oBank)
       char30000 = Mid(theRest, 1, strEnd)
       theRest = Mid(theRest, strEnd, Len(theRest) - strEnd)
     End If
+=======
+  On Error GoTo errorHandleGetNewTransactions
+ 
+  FIName = fi.name
+  createChar30000 str, char30000, theRest
+   
+  While (Len(char30000) > 0)
+    getActualTransactions char30000, fi
+    theBigData = theRest
+    createChar30000 theBigData, char30000, theRest
+>>>>>>> Stashed changes
   Wend
 GoTo theEnd
+<<<<<<< Updated upstream
 ErrorHandle:
   displayError Err.Number, Err.Description, "There was a system error. Contact User Support", FTLERR
+=======
+errorHandleGetNewTransactions:
+  displayError Err.Number, Err.Description, "Error: Source: get New Transactions, FI= " & fi.name, FATALERR
+>>>>>>> Stashed changes
 
 theEnd:
 
@@ -173,6 +195,7 @@ End Sub
 '  Dim rw As Long                               ' current spreadsheet row
 '  Dim dtStr As String                          ' date string in mm/dd/yy format for translation
 '
+<<<<<<< Updated upstream
 '  Dim transAlreadyProcessed As Boolean         ' QFX file with same FIT & account number was exist
 '  ' ModProc = "0301"
 '
@@ -406,3 +429,139 @@ End Sub
 'theEnd:
 'End Sub
 '
+=======
+' Called From
+' -----------
+' getNewTransactions
+'---------------------------------------------------------------------------------------
+  Dim strEnd As Long                         ' the desired end of char30000
+    
+  On Error GoTo errorHandleCreateChar3000
+   
+  If Len(BiggerData) > 30000 Then
+    strEnd = InStr(30000, BiggerData, "<STMTTRN>")           ' instr function inStrStartparameter is an integer and limited to 2^15 (32000+)
+    theRest = Mid(BiggerData, strEnd, Len(BiggerData) - strEnd)
+  Else
+    strEnd = Len(BiggerData)
+    theRest = ""
+  End If
+  char30000 = Mid(BiggerData, 1, strEnd)
+  
+
+GoTo theEnd
+errorHandleCreateChar3000:
+  displayError Err.Number, Err.Description, "Error: Source: create Char3000, size of Big data = " & Len(BiggerData) & ", size of char30000 = ," & Len(char30000) & ", size of theRest = " & Len(theRest), FATALERR
+
+theEnd:
+End Sub
+Sub getActualTransactions(str As String, fi As oFI)
+'---------------------------------------------------------------------------------------
+' Procedure : getActualTransaction
+' Author    : Christopher Prost, CP Business Analysis LLC. (9/21/2020)
+' Website   : http://www.cpbusinessanalysis.com
+' Copyright : 2020 CP Business Analysis LLC.  All Rights Reserved.
+' Purpose   : Copy data from STMTRNS section of transactionfile
+'
+' Usage:
+' ------
+' getActualTransactions
+'     input : str = some section of QFX or OFX file
+'     input : FI = FI information, about this FI
+'    output : transactions,as part of FI
+'
+' Called From
+' ------------------
+' getNewTransactions
+'---------------------------------------------------------------------------------------
+  Dim newTransIndex As Long                '
+  Dim strEnd As Long                      ' end of char30000
+  Dim trans As oTransaction               ' A new transaction
+  Dim FITemp As String                    ' Temporary FID holder
+  Dim DtTemp As String                    ' tempoary PDate holder
+  Dim inStrStart As Long                  ' start index for instr function
+  Dim FIName As String                    ' FI.name
+  Dim TransID As Integer                  ' current transaction index
+
+ On Error GoTo errorHandleGetActualTransactions
+
+  FIName = fi.name
+  inStrStart = 1
+  newTransIndex = InStr(inStrStart, str, "<STMTTRN>")
+  While (newTransIndex > 0)
+    inStrStart = newTransIndex
+    FITemp = xmlfieldvalue(str, "<FITID>", inStrStart)
+    If Not IsRepeatedTrans(fi, FITemp) Then
+      Set trans = New oTransaction
+      TransID = fi.Transactions.Count
+      trans.Index = TransID
+      trans.FITID = FITemp
+      DtTemp = xmlfieldvalue(str, "<DTPOSTED>", inStrStart)
+      trans.postedDate = CDate(Mid(DtTemp, 5, 2) & "/" & Mid(DtTemp, 7, 2) & "/" & Mid(DtTemp, 1, 4))
+      trans.amount = CCur(xmlfieldvalue(str, "<TRNAMT>", inStrStart)) * fi.DBCRdirection
+      trans.Description = xmlfieldvalue(str, "<NAME>", inStrStart)
+      trans.category = findCategory(trans.Description)
+      trans.Source = FIName
+      trans.Existing = False
+      fi.Transactions.Add trans, Key:=trans.FITID
+      ' Debug.Print "Posted " & trans.Index & ". " & trans.Source & " " & trans.postedDate & " " & trans.amount & " " & trans.Description
+    End If
+    inStrStart = inStrStart + 1
+    newTransIndex = InStr(inStrStart, str, "<STMTTRN>")
+  Wend
+  
+  
+GoTo theEnd
+errorHandleGetActualTransactions:
+
+  displayError Err.Number, Err.Description, "Error: Source:Get Actual Transactions, FI = " & FIName & ",Transaction ID = " & TransID & ", FITID = ," & FITemp, FATALERR
+
+theEnd:
+End Sub
+Function IsRepeatedTrans(fi As oFI, FITID As String) As Boolean
+'---------------------------------------------------------------------------------------
+' Procedure : IsRepeatedTrans
+' Author    : Christopher Prost, CP Business Analysis LLC. (9/21/2020)
+' Website   : http://www.cpbusinessanalysis.com
+' Copyright : 2020 CP Business Analysis LLC.  All Rights Reserved.
+' Purpose   : read only new transaction data from QFX file put into an instance of class transaction data
+'
+' Usage:
+' ------
+' IsRepeatedTrans
+'     input : FI object reprsenting entire Financial Instituion instance - whole object is desired for debugging
+'     input : FITID, string Transactions's unique ID
+'    output : Boolean value if record already exists in database
+'
+' Called From
+' -------------
+' get Actual Transactions
+'---------------------------------------------------------------------------------------
+
+  Dim trans As oTransaction               ' A new transaction
+  Dim foundTrans As oTransaction          ' A reference to a repeated transaction
+  Dim repeated As Boolean                 ' Found transaction flag
+  Dim Transactions As Collection          ' A collection of transaction found
+  Dim FIName As String                    ' Name of FI
+
+  On Error GoTo errorHandleIsRepeatedTrans
+ IsRepeatedTrans = False
+  If fi.Transactions.Count > 0 Then
+    repeated = False
+    On Error Resume Next
+    Set foundTrans = fi.Transactions.Item(FITID)
+    If Err.Number = 0 Then   ' record is found
+     ' Debug.Print "Found repeated transaction " & foundTrans.Index & ". " & foundTrans.postedDate & " " & foundTrans.amount & " " & foundTrans.Description
+      IsRepeatedTrans = True
+    End If
+    Err.Clear
+    On Error GoTo errorHandleIsRepeatedTrans
+  End If
+
+GoTo theEnd
+errorHandleIsRepeatedTrans:
+  displayError Err.Number, Err.Description, "Error: Source: Is Repeated Trans, FI= " & FIName & ", FITID = " & FITID, FATALERR
+theEnd:
+End Function
+
+
+>>>>>>> Stashed changes

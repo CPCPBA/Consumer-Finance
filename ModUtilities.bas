@@ -43,7 +43,11 @@ Sub displayError(errNum As Integer, Description As String, customMsg As String, 
     prefix = "FYI: "
   End If
 
+<<<<<<< Updated upstream
   MsgBox prefix & " " & errMsg, status
+=======
+  ' MsgBox prefix & " " & customMsg, status
+>>>>>>> Stashed changes
   Debug.Print prefix & " " & customMsg & " : " & errNum & " : "; Description
 
 GoTo theEnd
