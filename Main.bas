@@ -20,12 +20,8 @@ Public Const EXPENSESDATECOL = 3                   ' Date
 Public Const EXPENSESDESCRIPTIONCOL = 4            ' description
 Public Const EXPENSESMONTHCATEGORYCOL = 5          ' month category
 Public Const EXPENSESCATEGORYCOL = 6               ' Category
-Public Const EXPENSESCATEGORYTYPECOL = 7
-Public Const EXPENSESAMOUNTCOL = 8
-Public Const EXPENSESRUNNINGTOTALCOL = 9
-Public Const EXPENSESCLEAREDCOL = 10
-Public Const EXPENSESCLEAREDBALANCECOL = 11
-Public Const EXPENSESFITIDCOL = 12                   'Financial Institute Transaction UUID
+Public Const EXPENSESAMOUNTCOL = 7
+Public Const EXPENSESFITIDCOL = 8                  'Financial Institute Transaction UUID
 
 Sub categorize()
 
@@ -35,7 +31,7 @@ Sub categorize()
   
   Set expensesSheet = ThisWorkbook.Sheets(2)
   lastrow = expensesSheet.Cells(Rows.Count, EXPENSESDESCRIPTIONCOL).End(xlUp).Row
-  getExistingCategoryDescriptions "happy days"
+  getExistingCategoryDescriptions
   
   For rw = 2 To lastrow
     If expensesSheet.Cells(rw, EXPENSESCATEGORYCOL).value = "N/F" Then
@@ -44,7 +40,27 @@ Sub categorize()
     End If
   Next rw
 End Sub
-Sub main()
+Sub colorize()
+
+  Dim expensesSheet As Worksheet
+  Dim rw As Long
+  Dim lastrow As Long
+  Dim loadTransactions As Boolean
+  Dim FIs As Collection
+  Dim fi As oFI
+  
+  Set expensesSheet = ThisWorkbook.Sheets(2)
+  lastrow = expensesSheet.Cells(Rows.Count, EXPENSESDESCRIPTIONCOL).End(xlUp).Row
+  loadTransactions = False
+  Set FIs = loadFinancialInstitutions(loadTransactions)            ' all supported financial institute accounts
+
+  
+  For Each fi In FIs
+    colorRecords fi
+  Next fi
+End Sub
+
+Sub Main()
 '---------------------------------------------------------------------------------------
 ' Procedure : Main
 ' Author    : Christopher Prost, CP Business Analysis LLC. (9/21/2020)
@@ -73,7 +89,7 @@ Sub main()
   
   
   On Error GoTo errorHandleMain
-  getExistingCategoryDescriptions "onThisBeautifulDay"
+  getExistingCategoryDescriptions
   Set FIs = loadFinancialInstitutions()            ' all supported financial institute accounts
   Set Filelist = getFileList("QFX")                ' collection of supported file contents, supported extentions are delimited by a space
 

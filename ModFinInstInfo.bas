@@ -2,7 +2,7 @@ Attribute VB_Name = "ModFinInstInfo"
 Option Explicit
 
 
-Function loadFinancialInstitutions() As Collection
+Function loadFinancialInstitutions(loadTransactions As Boolean) As Collection
 
 On Error GoTo errorHandleLoadFinancialInstitutions
    
@@ -17,7 +17,9 @@ On Error GoTo errorHandleLoadFinancialInstitutions
   fi.AccountNumber = "9252"
   fi.FID = "5959"
   fi.DBCRdirection = 1
-  getExistingFITransactions fi.name, fi.Transactions
+  If loadTransactions Then
+    getExistingFITransactions fi.name, fi.Transactions
+  End If
   fi.BGColorIndex = 24
   fi.FGColorIndex = 3
   FIDAcctID = fi.FID & " " & fi.AccountNumber
@@ -28,7 +30,9 @@ On Error GoTo errorHandleLoadFinancialInstitutions
   fi.AccountNumber = "3006"
   fi.FID = "3101"
   fi.DBCRdirection = -1
-  getExistingFITransactions fi.name, fi.Transactions
+  If loadTransactions Then
+    getExistingFITransactions fi.name, fi.Transactions
+  End If
   fi.BGColorIndex = 35
   fi.FGColorIndex = 47
   FIDAcctID = fi.FID & " " & fi.AccountNumber
@@ -39,7 +43,9 @@ On Error GoTo errorHandleLoadFinancialInstitutions
   fi.AccountNumber = "8590"
   fi.FID = "2102"
   fi.DBCRdirection = -1
-  getExistingFITransactions fi.name, fi.Transactions
+  If loadTransactions Then
+    getExistingFITransactions fi.name, fi.Transactions
+  End If
   fi.BGColorIndex = 2
   fi.FGColorIndex = 33
   FIDAcctID = fi.FID & " " & fi.AccountNumber
@@ -50,7 +56,9 @@ On Error GoTo errorHandleLoadFinancialInstitutions
   fi.AccountNumber = "8379"
   fi.FID = "2102"
   fi.DBCRdirection = -1
-  getExistingFITransactions fi.name, fi.Transactions
+  If loadTransactions Then
+    getExistingFITransactions fi.name, fi.Transactions
+  End If
   fi.BGColorIndex = 15
   fi.FGColorIndex = 3
   FIDAcctID = fi.FID & " " & fi.AccountNumber
