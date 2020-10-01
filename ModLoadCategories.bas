@@ -8,10 +8,10 @@ Public categories As Collection
 Private Const LOOKUPKEYWORDSCOL = 1
 Private Const LOOKUPVALUECOL = 2
 
-Public maxDescriptionCategoryWordCount As Integer
 
 
-Sub getExistingCategoryDescriptions(str As String)
+
+Sub getExistingCategoryDescriptions()
 '---------------------------------------------------------------------------------------
 ' Procedure : getExistingCategoryDescriptions
 ' Author    : Christopher Prost, CP Business Analysis LLC. (9/21/2020)
@@ -40,7 +40,7 @@ Sub getExistingCategoryDescriptions(str As String)
   Dim rw As Long
   Dim lastrow  As Long
   Dim lookupSheet As Worksheet
-  Dim numKeyPhraseWords As Integer
+  Dim numRegExPhraseWords As Integer
   Dim strTmp As String
   
   
@@ -55,12 +55,11 @@ Sub getExistingCategoryDescriptions(str As String)
   For rw = 2 To lastrow
     Set category = New oCategory
     On Error Resume Next
-    category.keyPhrase = lookupSheet.Cells(rw, LOOKUPKEYWORDSCOL).value
+    category.RegExPhrase = CStr(lookupSheet.Cells(rw, LOOKUPKEYWORDSCOL).value)
     category.value = lookupSheet.Cells(rw, LOOKUPVALUECOL).value
     category.Existing = True
-    categories.Add category, lookupSheet.Cells(rw, LOOKUPKEYWORDSCOL).value
+    categories.Add category
   Next rw
-  maxDescriptionCategoryWordCount = lookupSheet.Cells(2, 4).value
 
 GoTo theEnd
 errorHandleGetExistingCategoryDescriptions:
