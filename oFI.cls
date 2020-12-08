@@ -13,7 +13,6 @@ Option Explicit
 Private mName As String
 Private mFID As String
 Private mAccountNumber As String
-Private mDBCRdirection As Integer
 Private mBalance As Currency
 Private mTransactions As Collection
 Private mBGColorIndex As Integer
@@ -33,10 +32,6 @@ End Property
 
 Public Property Get AccountNumber() As String
   AccountNumber = mAccountNumber
-End Property
-
-Public Property Get DBCRdirection() As Integer
-  DBCRdirection = mDBCRdirection
 End Property
 
 Public Property Get Balance() As Currency
@@ -63,10 +58,6 @@ End Property
 
 Public Property Let AccountNumber(acct As String)
   mAccountNumber = acct
-End Property
-
-Public Property Let DBCRdirection(direction As Integer)
-  mDBCRdirection = direction
 End Property
 
 Public Property Let Balance(bal As Currency)

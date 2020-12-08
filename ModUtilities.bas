@@ -11,7 +11,7 @@ Sub displayError(errNum As Integer, Description As String, customMsg As String, 
 '
 ' Usage:
 ' ------
-' getBankInfo
+' getFIInfo
 '     input : errNum, typically err.number
 '     input : description, typically err.description
 '     input : customMsg, a user friendly message more specific to what caused incident locally
@@ -27,15 +27,13 @@ Sub displayError(errNum As Integer, Description As String, customMsg As String, 
   Dim status As Integer
   Dim prefix As String
 
-#If Not DEBUGSTATUS Then
-  On Error GoTo ErrorHandle
-#End If
+  On Error Resume Next
 
   ' ModProc = "9902"
-  If criticality = FTLERR Then
+  If criticality = FATALERR Then
     status = vbCritical
     prefix = "Cannot Continue: "
-  ElseIf criticality = WRNERR Then
+  ElseIf criticality = WARNERR Then
     status = vbQuestion
     prefix = "Warning: "
   Else
@@ -43,24 +41,15 @@ Sub displayError(errNum As Integer, Description As String, customMsg As String, 
     prefix = "FYI: "
   End If
 
-<<<<<<< Updated upstream
-  MsgBox prefix & " " & errMsg, status
-=======
   ' MsgBox prefix & " " & customMsg, status
->>>>>>> Stashed changes
   Debug.Print prefix & " " & customMsg & " : " & errNum & " : "; Description
-
-GoTo theEnd
-ErrorHandle:
-  displayError Err.Number, Err.Description, "There was a system error. Contact User Support", FTLERR
 
 theEnd:
 End Sub
 
-
 Function xmlfieldvalue(str As String, searchStr As String, startPos As Long) As String
 '---------------------------------------------------------------------------------------
-' Procedure : xmlfieldvalue
+' Procedure : XMLfieldvalue
 ' Author    : Christopher Prost, CP Business Analysis LLC. (9/21/2020)
 ' Website   : http://www.cpbusinessanalysis.com
 ' Copyright : 2020 CP Business Analysis LLC.  All Rights Reserved.
@@ -74,11 +63,13 @@ Function xmlfieldvalue(str As String, searchStr As String, startPos As Long) As 
 '     input : desired location of substr
 '    output : strCount, number of times searchStr appears within str
 '
-' parseBankInfo, parseTransInfo
+' anywhere
 '---------------------------------------------------------------------------------------
   Dim valueStart As Long
   Dim bracketPos As Integer
   Dim found As Boolean
+  
+  On Error GoTo errorHandleXMLieldvalue
   
   found = False
   If InStr(startPos, str, searchStr) > 0 Then
@@ -93,7 +84,52 @@ Function xmlfieldvalue(str As String, searchStr As String, startPos As Long) As 
     xmlfieldvalue = "N/D"
   End If
   
+
+
+GoTo theEnd
+errorHandleXMLieldvalue:
+  displayError Err.Number, Err.Description, "Error: Source: XML field value, len of str = " & Len(str) & ", start = " & startPos & ", searchStr = " & searchStr, FATALERR
+
+theEnd:
 End Function
+
+'*****************************************************************
+'*****************************************************************
+'
+' function to compare 2 tokens return max or min
+'
+'*****************************************************************
+'*****************************************************************
+Public Function max(x, y As Variant) As Variant
+  
+ On Error GoTo errorHandleMax
+ 
+  max = IIf(x > y, x, y)
+
+
+GoTo theEnd
+errorHandleMax:
+
+  displayError Err.Number, Err.Description, "Error: Source: Max, X = " & x & ", Y = " & y, FATALERR
+
+theEnd:
+End Function
+Public Function min(x, y As Variant) As Variant
+  
+ On Error GoTo errorHandleMin
+ 
+   min = IIf(x < y, x, y)
+
+
+GoTo theEnd
+errorHandleMin:
+
+  displayError Err.Number, Err.Description, "Error: Source: Min, X = " & x & ", Y = " & y, FATALERR
+
+theEnd:
+End Function
+
+
 
 '*****************************************************************
 '*****************************************************************
@@ -118,45 +154,21 @@ Function strCount(str As String, searchStr As String) As Integer
 '     input : searchStr, string to locate within str
 '    output : strCount, number of times searchStr appears within str
 '
-' parseBankInfo, parseTransInfo
+' Called From
+' -----------
+' anywhere
 '---------------------------------------------------------------------------------------
-  Dim subStrs() As String
+ On Error GoTo errorHandleStrCount
+ 
 
-  subStrs = Split(str, searchStr)
-  strCount = UBound(subStrs) - LBound(subStrs)
+  strCount = UBound(Split(str, searchStr))
 
 GoTo theEnd
-ErrorHandle:
-  displayError Err.Number, Err.Description, "There was a system error. Contact User Support", FTLERR
+errorHandleStrCount:
+  displayError Err.Number, Err.Description, "Error: Source: Str Count, len of str " & Len(str), FATALERR
 
 theEnd:
 End Function
-'*****************************************************************
-'*****************************************************************
-'
-' Example of adding a collection to a class
-'
-'*****************************************************************
-'*****************************************************************
-'
-'' class cProduct
-'Private pChildList As Collection
-'
-'Private Sub Class_Initialize()
-'    Set pChildList = New Collection
-'End Sub
-'
-'Public Property Set ChildList(Value As CProduct)
-'    pChildList.Add Value
-'End Property
-'
-'Public Property Get ChildList() As Collection
-'    ChildList = pChildList
-'End Property
-'
-'
-'' The main function calling
-'
-'Set Pro = New CProduct
-'Set Child = New CProduct
-'Pro.ChildList.Add Child
+
+
+

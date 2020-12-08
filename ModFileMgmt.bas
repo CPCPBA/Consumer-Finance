@@ -1,64 +1,79 @@
 Attribute VB_Name = "ModFileMgmt"
 Option Explicit
 
-Sub getFileList(types As String, fileList As Collection)
+Function getFileList(types As String) As Collection
 '---------------------------------------------------------------------------------------
-' Procedure : readTransacations
+' Procedure : getFileList
 ' Author    : Christopher Prost, CP Business Analysis LLC. (9/21/2020)
 ' Website   : http://www.cpbusinessanalysis.com
 ' Copyright : 2020 CP Business Analysis LLC.  All Rights Reserved.
-' Purpose   : locate the directory, create list of files
+' Purpose   : locate the directory, create collection of file content
 '
 ' Usage:
 ' ------
-' readTransactions
+' getFileList
 '     input : all QFX files in provided downloads directory
-'    output : elements, file contents in array of elements
-'    output : file contents in one large string
+'    output : collection of file contents
 '
-' read transactions entry module
+' Main
 '---------------------------------------------------------------------------------------
 
-  Dim modProcErr As String
-  Dim fso As Object                               ' file system object
-  Dim errMsg As String                            ' custom error message
-  
-  Dim oFolder As Object                           ' $Home/downloads directory
-  Dim fileTypes() As String                       ' array of supported 3 letter file types
-  Dim ftIndex As Integer
-  Dim oFile  As Object                            ' Each file in oFolder
-  Dim sourceFile As Object
-  Dim fileStr As String
-  Dim noEOLfileStr As String
-  Dim downloadsPath As String
-  Dim supportedFileTypes As String
-  Dim fileListIndex As Integer
-  
-      
   Const ForReading = 1, ForWriting = 2, ForAppending = 8
   Const TristateUseDefault = -2, TristateTrue = -1, TristateFalse = 0
 
-  downloadsPath = Environ$("USERPROFILE") & "\Downloads"
-  supportedFileTypes = "QFX"
+  Dim downloadsPath As String
+  Dim filetypes() As String
+  Dim ftIndex As Integer
+  Dim filestr As String
+  Dim noEOLfileStr As String
+  Dim Filelist As Collection
+  Dim fileListIndex As Integer
   
+  Dim fso As Object                               ' file system object
+  Dim oFolder As Object                           ' $Home/downloads directory
+  Dim oFile  As Object                            ' Each file in oFolder
+  Dim fil As myFile                              ' filename and file contents
+  Dim sourceFile As Object
+  Dim path As String
+  
+  
+ On Error GoTo errorHandlegetFileList
+ 
+      
+  downloadsPath = Environ$("USERPROFILE") & "\Downloads"
+  path = downloadsPath & "and I don't know yet"
   Set fso = CreateObject("Scripting.FileSystemObject")
-  Set fileList = New Collection
+  Set Filelist = New Collection
   Set oFolder = fso.GetFolder(downloadsPath)
-  fileTypes = Split(supportedFileTypes, " ")
+  filetypes = Split(types, " ")
   fileListIndex = 0
   For Each oFile In oFolder.Files
-    For ftIndex = LBound(fileTypes) To UBound(fileTypes)
-      If (LCase(fso.GetExtensionName(oFile.Path)) = LCase(fileTypes(ftIndex))) Then
-        Set sourceFile = fso.openTextfile(oFile.Path, ForReading)
-        fileStr = sourceFile.ReadAll
-        noEOLfileStr = Replace(Replace(Replace(fileStr, vbCrLf, ""), vbLf, ""), vbCr, "")
+    For ftIndex = LBound(filetypes) To UBound(filetypes)
+      path = oFile.path
+      If (LCase(fso.GetExtensionName(oFile.path)) = LCase(filetypes(ftIndex))) Then
+        Set fil = New myFile
+        fil.filename = oFile.name
+        Set sourceFile = fso.openTextfile(oFile.path, ForReading)
+        filestr = sourceFile.ReadAll
+        fil.fileContents = Replace(Replace(Replace(filestr, vbCrLf, ""), vbLf, ""), vbCr, "")
         fileListIndex = fileListIndex + 1
-        Debug.Print fileListIndex & ". " & oFile.Path
-        fileList.Add noEOLfileStr
+        Debug.Print "Found " & fileListIndex & ". " & fil.filename
+        Filelist.Add fil
         Set sourceFile = Nothing
       End If
     Next ftIndex
   Next
+  Debug.Print
+  Debug.Print "There are " & Filelist.Count & " files to process"
+  Set getFileList = Filelist
   Set oFolder = Nothing
   Set fso = Nothing
-End Sub
+
+
+GoTo theEnd
+errorHandlegetFileList:
+  displayError Err.Number, Err.Description, "Error: Source: get File List, path = " & oFile.path, FATALERR
+
+theEnd:
+End Function
+

@@ -18,7 +18,7 @@ Initial environment
 2. Manually import data into "All detailed expenses" spreadsheet
 3. Manually categorize transactions
 4. Budget/Actuals income/expenses report already exists as a spreadsheet, budgets and avaialble categories are defined static on the spreadsheet.
-5. Immediae budget / actuals for mobile not started
+5. On-Demand budget / actuals report for iPhone/mobile not started
 
 Thoughts
 --------
@@ -32,3 +32,33 @@ bankID
 for the government backing
 4. Use Power Automate for the mobile app because it is quick and easy
 5.  I found the source code for gnuCash, a FSF version of Quicken.  It may be beneficial to review it to see if there is something I can add.
+
+1 October 2020
+The initial version of import transactions using VBA code in Excel is working and being used in internal production.  There are issues with the ribbon buttons absolute reference and the code being stored in the same Excel Workbook as the data.  It is easily resolvable however there exists a prefrence to implment this code in Azure SQL.  Therefore no more development time will be spent on this branch
+
+2 November 2020
+2 new GIT repositories were created.  The existing Consumer-Finance git was moved one folder lower to Consumer-Finance/import-Transactions-VBA.  A new branch was created called Consumer-Finance/get-Transactions
+
+4 December 2020
+Fixed no Duplicate transaction rules - 
+    1.  No longer use FITID
+    2.  UUID = Source & date & Description & Amount. 
+    3.  If original is in database/detailed transactions table already, dup is ignored
+    4.  If original is in different transaction file and not in table, dup is ignored
+    5.  If original and dup are in the same file, description of dup is appended with " -i{n} where
+        {n} is a sequential integer starting at 1
+Regular Expressions now used to identify categories. 
+    1. Can use regular expression patterns
+    2. Exact match no longer required
+    3. Keywords no longer have to begin at beginning of description
+    4. Whole process is much smaller
+Regular Expressions now used to locate transactions entries in QFX file
+    1. Location within file can be long integers
+    2. No longer need workaround for instr requiring short integers
+    3. Whole process is much smaller
+Colorize
+    1. Added column for category match
+    2. now used constant called firstCol and last col
+New formulas
+    1. Month-Category in detailed transactions table is now a formula, allows for easier manual edits
+    2. UUID field is now a formula in detailed transaction table.  Allows for easiuer manual edits
