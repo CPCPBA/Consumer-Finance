@@ -14,6 +14,8 @@ End Enum
 
 ' Transaction Processing
 ' ----------------------
+Public Const EXPENSESFIRSTCOL = 1                  ' source
+Public Const EXPENSESLASTCOL = 13                  ' CATEGORY GROUP
 Public Const EXPENSESSOURCECOL = 1                 ' source
 Public Const EXPENSESMONTHCOL = 2                  ' Month
 Public Const EXPENSESDATECOL = 3                   ' Date
@@ -21,7 +23,13 @@ Public Const EXPENSESDESCRIPTIONCOL = 4            ' description
 Public Const EXPENSESMONTHCATEGORYCOL = 5          ' month category
 Public Const EXPENSESCATEGORYCOL = 6               ' Category
 Public Const EXPENSESAMOUNTCOL = 7
-Public Const EXPENSESFITIDCOL = 8                  'Financial Institute Transaction UUID
+Public Const EXPENSESRUNNINGTOTALCOL = 8
+Public Const EXPENSERECONCILIATIONDATECOL = 9
+Public Const EXPENSERECONCILIATIONTRANSIDCOL = 10
+Public Const EXPENSESCLEAREDBALANCECOL = 11
+Public Const EXPENSESTRANSIDCOL = 12                   'Financial Institute Transaction UUID
+Public Const EXPENSESCATEGORYGROUP = 13                   'Grouping
+
 
 Sub categorize()
 
@@ -29,38 +37,37 @@ Sub categorize()
   Dim rw As Long
   Dim lastrow As Long
   
-  Set expensesSheet = ThisWorkbook.Sheets(2)
+  Set expensesSheet = ThisWorkbook.Sheets(3)
   lastrow = expensesSheet.Cells(Rows.Count, EXPENSESDESCRIPTIONCOL).End(xlUp).Row
   getExistingCategoryDescriptions
   
   For rw = 2 To lastrow
-    If expensesSheet.Cells(rw, EXPENSESCATEGORYCOL).value = "N/F" Then
+    If (expensesSheet.Cells(rw, EXPENSESCATEGORYCOL).value = "N/F") Or (expensesSheet.Cells(rw, EXPENSESCATEGORYCOL).value = "") Then
       expensesSheet.Cells(rw, EXPENSESCATEGORYCOL).value = findCategory(expensesSheet.Cells(rw, EXPENSESDESCRIPTIONCOL).value)
-      expensesSheet.Cells(rw, EXPENSESMONTHCATEGORYCOL).value = expensesSheet.Cells(rw, EXPENSESMONTHCOL).value & " " & expensesSheet.Cells(rw, EXPENSESCATEGORYCOL).value
+'      expensesSheet.Cells(rw, EXPENSESMONTHCATEGORYCOL).value = expensesSheet.Cells(rw, EXPENSESMONTHCOL).value & " " & expensesSheet.Cells(rw, EXPENSESCATEGORYCOL).value
     End If
   Next rw
 End Sub
 Sub colorize()
-
   Dim expensesSheet As Worksheet
   Dim rw As Long
   Dim lastrow As Long
-  Dim loadTransactions As Boolean
-  Dim FIs As Collection
-  Dim fi As oFI
+  Dim FIs As Collection     ' Collection of financial Institutions
   
-  Set expensesSheet = ThisWorkbook.Sheets(2)
-  lastrow = expensesSheet.Cells(Rows.Count, EXPENSESDESCRIPTIONCOL).End(xlUp).Row
-  loadTransactions = False
-  Set FIs = loadFinancialInstitutions(loadTransactions)            ' all supported financial institute accounts
+  Dim NeedToLoadTransactions As Boolean
+  Dim FI As oFI
+  
+  NeedToLoadTransactions = False
+  Set FIs = loadFinancialInstitutions(NeedToLoadTransactions)    ' all supported financial institute accounts
+  
+  For Each FI In FIs
+    colorRecords FI
+  Next FI
+  
 
-  
-  For Each fi In FIs
-    colorRecords fi
-  Next fi
 End Sub
 
-Sub Main()
+Sub main()
 '---------------------------------------------------------------------------------------
 ' Procedure : Main
 ' Author    : Christopher Prost, CP Business Analysis LLC. (9/21/2020)
@@ -83,23 +90,25 @@ Sub Main()
   Dim fListCounter As Integer                               ' counter for Filelist
   Dim filestr As String
   Dim org As String
-  Dim fi As oFI
+  Dim FI As oFI
   Dim categories As Collection
   Dim MaxNumberKeyWords As Integer
+  Dim NeedToLoadExistingTransactions As Boolean
   
   
   On Error GoTo errorHandleMain
   getExistingCategoryDescriptions
-  Set FIs = loadFinancialInstitutions()            ' all supported financial institute accounts
-  Set Filelist = getFileList("QFX")                ' collection of supported file contents, supported extentions are delimited by a space
-
+  NeedToLoadExistingTransactions = True
+  Set FIs = loadFinancialInstitutions(NeedToLoadExistingTransactions)    ' all supported financial institute accounts
+  Set Filelist = getFileList("QFX")                        ' collection of supported file contents, supported extentions are delimited by a space
   FIKey = "N/D"
   For fListCounter = 1 To Filelist.Count
-    filestr = Filelist(fListCounter)
+    filestr = Filelist(fListCounter).fileContents
     FIKey = getFIInfo(filestr)
     On Error Resume Next
-    Set fi = FIs(FIKey)
+    Set FI = FIs(FIKey)
     If Err.Number = 0 Then
+      Debug.Print fListCounter & ". Processing Transactions for " & FI.name & " from " & Filelist(fListCounter).filename
       getNewTransactions Filelist(fListCounter), FIs(FIKey)
     Else
       org = xmlfieldvalue(Filelist(fListCounter), "<ORG>", 1)
@@ -111,12 +120,9 @@ Sub Main()
   Set Filelist = Nothing
   writeRecords FIs
   
-  
-  
-  
 GoTo theEnd
 errorHandleMain:
-  displayError Err.Number, Err.Description, "Error: Source: Main, FIKey= " & FIKey & ", FI= " & fi.name, FATALERR
+  displayError Err.Number, Err.Description, "Error: Source: Main, FIKey= " & FIKey & ", FI= " & FI.name, FATALERR
 
 theEnd:
 End Sub
