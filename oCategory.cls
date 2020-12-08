@@ -9,20 +9,20 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private mKeyPhrase As String
+Private mRegExPhrase As String
 Private mValue As String
 Private mExisting As Boolean
 
-Public Property Get keyPhrase() As String
-  keyPhrase = mKeyPhrase
+Public Property Get RegExPhrase() As String
+  RegExPhrase = mRegExPhrase
 End Property
 
 Public Property Get value() As String
   value = mValue
 End Property
 
-Public Property Let keyPhrase(phrase As String)
-  mKeyPhrase = phrase
+Public Property Let RegExPhrase(phrase As String)
+  mRegExPhrase = phrase
 End Property
 
 Public Property Let value(val As String)
